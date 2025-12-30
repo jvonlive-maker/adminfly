@@ -28,7 +28,7 @@ local PITCH_ANGLE = 10
 -- ASSET IDS
 local ANIM_IDLE_ID = "rbxassetid://93326430026112" 
 local ANIM_FLY_ID = "rbxassetid://140568359164725"  
-local ANIM_LAND_ID = "rbxassetid://YOUR_LANDING_ANIM_ID" 
+local ANIM_LAND_ID = "rbxassetid://112472797825991" 
 local BOOM_SOUND_ID = "rbxassetid://9120769331" 
 local WIND_SOUND_ID = "rbxassetid://93035214379043" 
 
@@ -78,7 +78,7 @@ local function setupEffects()
 	boomSound.SoundId = BOOM_SOUND_ID
 	boomSound.Volume = 0.6
 	boomSound.Parent = rootPart
-	
+
 	windSound = Instance.new("Sound")
 	windSound.SoundId = WIND_SOUND_ID
 	windSound.Volume = 0
@@ -107,7 +107,7 @@ end
 
 local function setupAnims()
 	local animator = humanoid:FindFirstChild("Animator") or humanoid:WaitForChild("Animator")
-	
+
 	local idleAnimObj = Instance.new("Animation")
 	idleAnimObj.AnimationId = ANIM_IDLE_ID
 	local flyAnimObj = Instance.new("Animation")
@@ -118,7 +118,7 @@ local function setupAnims()
 	loadedIdleAnim = animator:LoadAnimation(idleAnimObj)
 	loadedFlyAnim = animator:LoadAnimation(flyAnimObj)
 	loadedLandAnim = animator:LoadAnimation(landAnimObj)
-	
+
 	loadedIdleAnim.Priority = Enum.AnimationPriority.Action
 	loadedFlyAnim.Priority = Enum.AnimationPriority.Action
 	loadedLandAnim.Priority = Enum.AnimationPriority.Action4
@@ -132,7 +132,7 @@ local function toggleFlight(forceOff)
 	if forceOff then isFlying = false else isFlying = not isFlying end
 	isFreeLooking = false
 	speedGui.Enabled = isFlying
-	
+
 	if isFlying then
 		currentSpeed = 0
 		currentBank = 0
@@ -199,7 +199,7 @@ end)
 
 RunService.RenderStepped:Connect(function(dt)
 	if not isFlying or isLanding then return end
-	
+
 	local lv = rootPart:FindFirstChild("FlyVelocity")
 	local ao = rootPart:FindFirstChild("FlyGyro")
 	if not lv or not ao then return end
@@ -243,7 +243,7 @@ RunService.RenderStepped:Connect(function(dt)
 	rayParams.FilterDescendantsInstances = {character, groundEffect}
 	rayParams.FilterType = Enum.RaycastFilterType.Exclude
 	local groundRay = workspace:Raycast(rootPart.Position, Vector3.new(0, -7, 0), rayParams)
-	
+
 	if groundRay and isGMode then
 		isLanding = true
 		toggleFlight(true) 
