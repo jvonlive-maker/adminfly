@@ -32,11 +32,11 @@ local ANIM_LAND_ID = "rbxassetid://YOUR_LANDING_ANIM_ID"
 local BOOM_SOUND_ID = "rbxassetid://9120769331" 
 local WIND_SOUND_ID = "rbxassetid://93035214379043" 
 
--- KEYS
+-- UPDATED KEYS
 local TOGGLE_KEY = Enum.KeyCode.H
-local BOOST_KEY = Enum.KeyCode.LeftShift
-local G_KEY = Enum.KeyCode.G 
-local WARP_KEY = Enum.KeyCode.Space
+local BOOST_KEY = Enum.KeyCode.Space -- Changed from Shift
+local G_KEY = Enum.KeyCode.C         -- Changed from G
+local WARP_KEY = Enum.KeyCode.V      -- Changed from Space
 local FREELOOK_KEY = Enum.KeyCode.RightAlt
 local UP_KEY = Enum.KeyCode.E
 local DOWN_KEY = Enum.KeyCode.Q
@@ -119,10 +119,9 @@ local function setupAnims()
 	loadedFlyAnim = animator:LoadAnimation(flyAnimObj)
 	loadedLandAnim = animator:LoadAnimation(landAnimObj)
 	
-	-- SET PRIORITIES HERE
 	loadedIdleAnim.Priority = Enum.AnimationPriority.Action
 	loadedFlyAnim.Priority = Enum.AnimationPriority.Action
-	loadedLandAnim.Priority = Enum.AnimationPriority.Action4 -- Highest possible
+	loadedLandAnim.Priority = Enum.AnimationPriority.Action4
 end
 
 setupAnims()
@@ -239,7 +238,7 @@ RunService.RenderStepped:Connect(function(dt)
 	currentSpeed = currentSpeed + (targetSpeed - currentSpeed) * ACCEL_SPEED
 	currentBank = currentBank + (targetBank - currentBank) * BANK_SPEED
 
-	-- LANDING LOGIC
+	-- LANDING LOGIC (Triggers only when Space + C is held)
 	local rayParams = RaycastParams.new()
 	rayParams.FilterDescendantsInstances = {character, groundEffect}
 	rayParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -256,7 +255,7 @@ RunService.RenderStepped:Connect(function(dt)
 		return
 	end
 
-	-- Visuals
+	-- Visuals & Sounds
 	local dustRay = workspace:Raycast(rootPart.Position, Vector3.new(0, -25, 0), rayParams)
 	if dustRay and currentSpeed > 50 then
 		groundEffect.Position = dustRay.Position
@@ -271,7 +270,7 @@ RunService.RenderStepped:Connect(function(dt)
 	windSound.PlaybackSpeed = 0.5 + (currentSpeed / SPEED_WARP) * 1.5
 	lv.VectorVelocity = moveVector * currentSpeed
 
-	-- Rotation and Animation
+	-- Rotation Logic
 	local leanAmount = math.rad(-(currentSpeed / SPEED_WARP) * PITCH_ANGLE)
 	local bankAmount = math.rad(currentBank * BANK_ANGLE)
 	if isFreeLooking and isMoving then
