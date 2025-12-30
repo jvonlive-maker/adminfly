@@ -13,7 +13,7 @@ local camera = Workspace.CurrentCamera
 -- CONFIGURATION -----------------------------------------
 local SPEED_BASE = 25  
 local SPEED_BOOST = 100 
-local SPEED_GMODE = 200 -- New Speed Tier
+local SPEED_GMODE = 200 
 local SPEED_WARP = 1000 
 local ACCEL_SPEED = 0.06 
 
@@ -28,14 +28,14 @@ local PITCH_ANGLE = 10
 -- ASSET IDS
 local ANIM_IDLE_ID = "rbxassetid://93326430026112" 
 local ANIM_FLY_ID = "rbxassetid://140568359164725"  
-local ANIM_LAND_ID = "rbxassetid://112472797825991" 
+local ANIM_LAND_ID = "rbxassetid://YOUR_LANDING_ANIM_ID" 
 local BOOM_SOUND_ID = "rbxassetid://9120769331" 
 local WIND_SOUND_ID = "rbxassetid://93035214379043" 
 
 -- KEYS
 local TOGGLE_KEY = Enum.KeyCode.H
 local BOOST_KEY = Enum.KeyCode.LeftShift
-local G_KEY = Enum.KeyCode.G -- New G-Mode Key
+local G_KEY = Enum.KeyCode.G 
 local WARP_KEY = Enum.KeyCode.Space
 local FREELOOK_KEY = Enum.KeyCode.RightAlt
 local UP_KEY = Enum.KeyCode.E
@@ -78,7 +78,7 @@ local function setupEffects()
 	boomSound.SoundId = BOOM_SOUND_ID
 	boomSound.Volume = 0.6
 	boomSound.Parent = rootPart
-
+	
 	windSound = Instance.new("Sound")
 	windSound.SoundId = WIND_SOUND_ID
 	windSound.Volume = 0
@@ -107,6 +107,7 @@ end
 
 local function setupAnims()
 	local animator = humanoid:FindFirstChild("Animator") or humanoid:WaitForChild("Animator")
+	
 	local idleAnimObj = Instance.new("Animation")
 	idleAnimObj.AnimationId = ANIM_IDLE_ID
 	local flyAnimObj = Instance.new("Animation")
@@ -117,6 +118,11 @@ local function setupAnims()
 	loadedIdleAnim = animator:LoadAnimation(idleAnimObj)
 	loadedFlyAnim = animator:LoadAnimation(flyAnimObj)
 	loadedLandAnim = animator:LoadAnimation(landAnimObj)
+	
+	-- SET PRIORITIES HERE
+	loadedIdleAnim.Priority = Enum.AnimationPriority.Action
+	loadedFlyAnim.Priority = Enum.AnimationPriority.Action
+	loadedLandAnim.Priority = Enum.AnimationPriority.Action4 -- Highest possible
 end
 
 setupAnims()
@@ -127,7 +133,7 @@ local function toggleFlight(forceOff)
 	if forceOff then isFlying = false else isFlying = not isFlying end
 	isFreeLooking = false
 	speedGui.Enabled = isFlying
-
+	
 	if isFlying then
 		currentSpeed = 0
 		currentBank = 0
@@ -179,7 +185,7 @@ UserInputService.InputBegan:Connect(function(input, gp)
 		boomSound:Play()
 	end
 	if input.KeyCode == G_KEY and isFlying and isBoosting then
-		boomSound.Pitch = 1.1 -- Slightly higher than boost
+		boomSound.Pitch = 1.1 
 		boomSound:Play()
 	end
 	if input.KeyCode == WARP_KEY and isFlying and isBoosting then
@@ -194,7 +200,7 @@ end)
 
 RunService.RenderStepped:Connect(function(dt)
 	if not isFlying or isLanding then return end
-
+	
 	local lv = rootPart:FindFirstChild("FlyVelocity")
 	local ao = rootPart:FindFirstChild("FlyGyro")
 	if not lv or not ao then return end
@@ -233,26 +239,24 @@ RunService.RenderStepped:Connect(function(dt)
 	currentSpeed = currentSpeed + (targetSpeed - currentSpeed) * ACCEL_SPEED
 	currentBank = currentBank + (targetBank - currentBank) * BANK_SPEED
 
-	-- LANDING LOGIC (Triggers only when in Shift + G mode)
+	-- LANDING LOGIC
 	local rayParams = RaycastParams.new()
 	rayParams.FilterDescendantsInstances = {character, groundEffect}
 	rayParams.FilterType = Enum.RaycastFilterType.Exclude
 	local groundRay = workspace:Raycast(rootPart.Position, Vector3.new(0, -7, 0), rayParams)
-
+	
 	if groundRay and isGMode then
 		isLanding = true
 		toggleFlight(true) 
-
 		loadedLandAnim:Play()
-
-		task.delay(1.5, function()
+		task.delay(3, function()
 			loadedLandAnim:Stop(0.5)
 			isLanding = false 
 		end)
 		return
 	end
 
-	-- Visuals & Sounds
+	-- Visuals
 	local dustRay = workspace:Raycast(rootPart.Position, Vector3.new(0, -25, 0), rayParams)
 	if dustRay and currentSpeed > 50 then
 		groundEffect.Position = dustRay.Position
