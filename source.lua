@@ -12,12 +12,15 @@ local camera = Workspace.CurrentCamera
 -- CONFIGURATION -----------------------------------------
 local SPEED_BASE = 25  
 local SPEED_BOOST = 100 
-local SPEED_WARP = 1000 -- Speed when Shift + Space are held
-local LERP_SPEED = 0.08 -- Lowered slightly for a "heavy" acceleration feel
+local SPEED_WARP = 1000 
+
+-- This controls how fast you accelerate. 
+-- 0.05 is slow/heavy, 0.1 is standard, 0.2 is snappy.
+local ACCEL_SPEED = 0.06 
 
 local ANIM_IDLE_ID = "rbxassetid://93326430026112" 
 local ANIM_FLY_ID = "rbxassetid://140568359164725"  
-local BOOM_SOUND_ID = "rbxassetid://142245274" 
+local BOOM_SOUND_ID = "rbxassetid://9120769331" 
 
 local TOGGLE_KEY = Enum.KeyCode.H
 local BOOST_KEY = Enum.KeyCode.LeftShift
@@ -98,13 +101,12 @@ UserInputService.InputBegan:Connect(function(input, gp)
 	
 	if input.KeyCode == BOOST_KEY and isFlying then 
 		isBoosting = true 
-		boomSound.Pitch = 0.8 -- Deeper sound for shift
+		boomSound.Pitch = 0.8
 		boomSound:Play()
 	end
 
-    -- Play a second, higher pitch boom if they hit Warp
     if input.KeyCode == WARP_KEY and isFlying and isBoosting then
-        boomSound.Pitch = 1.5
+        boomSound.Pitch = 1.4
         boomSound:Play()
     end
 end)
@@ -123,6 +125,7 @@ RunService.RenderStepped:Connect(function(dt)
 	local moveVector = Vector3.zero
 	local camCFrame = camera.CFrame
 
+	-- Movement Inputs
 	if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveVector += camCFrame.LookVector end
 	if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveVector -= camCFrame.LookVector end
 	if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveVector -= camCFrame.RightVector end
@@ -134,31 +137,32 @@ RunService.RenderStepped:Connect(function(dt)
 	local targetSpeed = 0
 
 	if isMoving then
-		-- SPEED LOGIC:
-        if isBoosting then
-            if UserInputService:IsKeyDown(WARP_KEY) then
-                targetSpeed = SPEED_WARP
-            else
-                targetSpeed = SPEED_BOOST
-            end
-        else
-            targetSpeed = SPEED_BASE
-        end
+		if isBoosting then
+			if UserInputService:IsKeyDown(WARP_KEY) then
+				targetSpeed = SPEED_WARP
+			else
+				targetSpeed = SPEED_BOOST
+			end
+		else
+			targetSpeed = SPEED_BASE
+		end
 		moveVector = moveVector.Unit
 	end
 
-	currentSpeed = currentSpeed + (targetSpeed - currentSpeed) * LERP_SPEED
+	-- SMOOTH SPEED TRANSITION
+	-- This line makes the speed climb or fall gradually
+	currentSpeed = currentSpeed + (targetSpeed - currentSpeed) * ACCEL_SPEED
+	
 	lv.VectorVelocity = moveVector * currentSpeed
 	ao.CFrame = CFrame.lookAt(rootPart.Position, rootPart.Position + camCFrame.LookVector)
 
 	-- Shake Effect and Animation
-	if isBoosting and currentSpeed > (SPEED_BASE + 5) then
-        -- Intense shake for Warp Speed
-		local shakeMult = (currentSpeed > 500) and 0.5 or 0.1
-		local shakeIntensity = shakeMult * (currentSpeed / SPEED_BOOST)
+	if currentSpeed > (SPEED_BASE + 5) then
+		-- Dynamic Shake: Get more intense the closer you get to Warp speed
+		local shakeIntensity = 0.05 + (0.4 * (currentSpeed / SPEED_WARP))
 		
-		local xShake = math.noise(tick() * 30, 0) * shakeIntensity
-		local yShake = math.noise(0, tick() * 30) * shakeIntensity
+		local xShake = math.noise(tick() * 35, 0) * shakeIntensity
+		local yShake = math.noise(0, tick() * 35) * shakeIntensity
 		camera.CFrame = camera.CFrame * CFrame.new(xShake, yShake, 0)
 
 		if not loadedFlyAnim.IsPlaying then loadedFlyAnim:Play(0.5) end
